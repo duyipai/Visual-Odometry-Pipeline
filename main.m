@@ -1,6 +1,6 @@
 %% Setup
 ds = 2; % 0: KITTI, 1: Malaga, 2: parking
-
+parking_path = './data/parking/';
 if ds == 0
     % need to set kitti_path to folder containing "00" and "poses"
     assert(exist('kitti_path', 'var') ~= 0);
@@ -25,7 +25,7 @@ elseif ds == 2
     assert(exist('parking_path', 'var') ~= 0);
     last_frame = 598;
     K = load([parking_path '/K.txt']);
-     
+    bootstrap_frames = 0:last_frame;
     ground_truth = load([parking_path '/poses.txt']);
     ground_truth = ground_truth(:, [end-8 end]);
 else
