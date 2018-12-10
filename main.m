@@ -71,7 +71,21 @@ for i = range
     else
         assert(false);
     end
-    % Makes sure that plots refresh.    
+    
+    if (i ~= 1)
+        [points_new,validity] = tracker(image);
+        valid_points = points_new(validity, :);
+    end
+    if(mod(i, 3) == 1)
+      if(i ~= 1)
+          
+      end
+      featurePoints = detectFeature(image).Location;
+      tracker = vision.PointTracker;
+      initialize(tracker, featurePoints, image);
+    end
+    % Makes sure that plots refresh.  
+    
     pause(0.01);
     
     prev_img = image;
