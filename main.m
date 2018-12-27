@@ -103,6 +103,7 @@ S_i.T = repmat(T(:), [1, numOfFeature]);
 range = (bootstrap_frames(2)+1):last_frame;
 global bearingAngleCosThreshold;
 bearingAngleCosThreshold = 0.8;
+rng(1);
 for i = range
     fprintf('\n\nProcessing frame %d\n=====================\n', i);
     if ds == 0

@@ -1,6 +1,6 @@
 function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use spacial coordinate
     global bearingAngleCosThreshold;
-    
+    rng(1);
     % first extract current pose
     global keyPointTracker candidateTracker;
     [key_points,validity] = keyPointTracker(I_i);
@@ -14,7 +14,7 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     candidate_points = candidate_points(validity, :);
     S_prev.F = S_prev.F(:, validity);
     S_prev.T = S_prev.T(:, validity);
-    canBeAdded = zeros(1, size(S_prev.F, 2));
+    canBeAdded = false([1, size(S_prev.F, 2)]);
     currentRot = rotationMatrixToVector(worldOrientation);
     currentRot_normalized = currentRot / norm(currentRot);
     for i=1:length(canBeAdded)
@@ -22,7 +22,7 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
         rot = rotationMatrixToVector(rot(1:3, 1:3));
         cosAngle = dot(currentRot_normalized, rot)/norm(rot);
         if (cosAngle < bearingAngleCosThreshold)
-            canBeAdded(i) = 1;
+            canBeAdded(i) = true;
         end
     end
     if (sum(canBeAdded) ~= 0)
