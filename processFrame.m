@@ -7,7 +7,7 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     key_points = key_points(validity, :);
     S_prev.X = S_prev.X(:, validity);
     [worldOrientation,worldLocation] = estimateWorldCameraPose(key_points, S_prev.X', cameraParams);
-    T_i = [worldOrientation, worldLocation];
+    T_i = [worldOrientation, worldLocation'];
     
     % then seek new tracking points from candidates
     [candidate_points, validity] = candidateTracker(I_i);
@@ -25,29 +25,37 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
             canBeAdded(i) = 1;
         end
     end
-    new_points = candidate_points(canBeAdded, :);
-    new_T = S_prev.T(:, canBeAdded);
-    new_F = S_prev.F(:, canBeAdded);
-    new_landmarks = zeros(3, size(new_points, 1));
-    camMatrix2 = cameraMatrix(cameraParams, worldOrientation, worldLocation);
-    for i=1:size(new_points, 1)
-       T = reshape(new_T(:, i), [3, 4]);
-       camMatrix1 = cameraMatrix(cameraParams, T(1:3, 1:3), T(:, 4));
-       worldPoint = triangulate(new_F(:, i)', new_points(i, :), camMatrix1,camMatrix2);
-       new_landmarks(:, i) = worldPoint';
+    if (sum(canBeAdded) ~= 0)
+        new_points = candidate_points(canBeAdded, :);
+        new_T = S_prev.T(:, canBeAdded);
+        new_F = S_prev.F(:, canBeAdded);
+        new_landmarks = zeros(3, size(new_points, 1));
+        camMatrix2 = cameraMatrix(cameraParams, worldOrientation, worldLocation);
+        for i=1:size(new_points, 1)
+           T = reshape(new_T(:, i), [3, 4]);
+           camMatrix1 = cameraMatrix(cameraParams, T(1:3, 1:3), T(:, 4));
+           worldPoint = triangulate(new_F(:, i)', new_points(i, :), camMatrix1, camMatrix2);
+           new_landmarks(:, i) = worldPoint';
+        end
+        S_i.X = [S_prev.X, new_landmarks]; % add new landmark
+    else
+        new_points = [];
+        S_i.X = S_prev.X;
     end
-    S_i.X = [S_prev.X, new_landmarks]; % add new landmark
     key_points = [key_points; new_points];
     setPoints(keyPointTracker, key_points);% add new tracking point
     
     % update candidates
-    candidate_points = candidate_points(~canBeAdded, :);
-    S_i.F = S_prev.F(:, ~canBeAdded);
-    S_i.T = S_prev.T(:, ~canBeAdded); % removed candidates that are already keypoints
+    %if(sum(canBeAdded) ~= size(canBeAdded, 2))
+        candidate_points = candidate_points(~canBeAdded, :);
+        S_i.F = S_prev.F(:, ~canBeAdded);
+        S_i.T = S_prev.T(:, ~canBeAdded); % removed candidates that are already keypoints 
+    %end
     
     % add new candidates
     featurePoints = detectHarrisFeatures(I_i);
-    featurePoints = featurePoints.location;
+    featurePoints = featurePoints.Location;
+    featurePoints = floor(featurePoints + 0.5); % but why detect feature gives non integer points?
     zero_img = zeros(size(I_i));
     one_img = ones(size(I_i));
     occupied_points = [key_points; candidate_points];
