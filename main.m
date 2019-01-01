@@ -102,7 +102,7 @@ S_i.T = repmat(T(:), [1, numOfFeature]);
 %% Continuous operation
 range = (bootstrap_frames(2)+1):last_frame;
 global bearingAngleCosThreshold;
-bearingAngleCosThreshold = 0.8;
+bearingAngleCosThreshold = 0.5;
 rng(1);
 for i = range
     fprintf('\n\nProcessing frame %d\n=====================\n', i);

@@ -15,11 +15,11 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     S_prev.F = S_prev.F(:, validity);
     S_prev.T = S_prev.T(:, validity);
     canBeAdded = false([1, size(S_prev.F, 2)]);
-    currentRot = rotationMatrixToVector(worldOrientation);
+    currentRot = worldLocation;
     currentRot_normalized = currentRot / norm(currentRot);
     for i=1:length(canBeAdded)
         rot = reshape(S_prev.T(:, i), [3, 4]);
-        rot = rotationMatrixToVector(rot(1:3, 1:3));
+        rot = rot(1:3, 4);
         cosAngle = dot(currentRot_normalized, rot)/norm(rot);
         if (cosAngle < bearingAngleCosThreshold)
             canBeAdded(i) = true;
