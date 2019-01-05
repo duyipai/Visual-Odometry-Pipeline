@@ -42,7 +42,7 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
         new_points = [];
         S_i.X = S_prev.X;
     end
-    key_points = [key_points; new_points];
+    %key_points = [key_points; new_points];
     setPoints(keyPointTracker, key_points);% add new tracking point
     
     % update candidates

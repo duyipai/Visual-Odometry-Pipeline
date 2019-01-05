@@ -60,8 +60,8 @@ end
 focalLength = [K(1, 1); K(2, 2)];
 principalPoint = [K(1, 3); K(2, 3)];
 imageSize = size(img0);
-cameraParams = cameraIntrinsics(focalLength,principalPoint,imageSize);
-
+%cameraParams = cameraIntrinsics(focalLength,principalPoint,imageSize);
+cameraParams = cameraParameters('IntrinsicMatrix', K');
 % init tracker
 featurePoints = detectHarrisFeatures(img0);
 featurePoints = featurePoints.Location;
@@ -103,6 +103,9 @@ S_i.T = repmat(T(:), [1, numOfFeature]);
 range = (bootstrap_frames(2)+1):last_frame;
 global bearingAngleCosThreshold;
 bearingAngleCosThreshold = 0.5;
+X = [];
+Y = [];
+Z = [];
 rng(1);
 for i = range
     fprintf('\n\nProcessing frame %d\n=====================\n', i);
@@ -121,6 +124,10 @@ for i = range
     
     [S_i, T_i] = processFrame(image, S_i, cameraParams);
     % Makes sure that plots refresh.  
-    
+    X = [X; T_i(1, 4)];
+    Y = [Y; T_i(2, 4)];
+    Z = [Z; T_i(3, 4)];
+    %scatter3(X, Y, Z);
+    scatter(X, Z);
     pause(0.01);
 end
