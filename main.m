@@ -97,7 +97,7 @@ zero_img(ind) = 1;
 featurePoints_new = zero_img .* one_img;
 [row, col] = find(featurePoints_new);
 featurePoints_new = [col, row];
-candidate_points = featurePoints_new;
+candidate_points = single(featurePoints_new);
 candidateTracker = vision.PointTracker('MaxBidirectionalError', 1);
 initialize(candidateTracker, candidate_points, img1);% init candidate tracker
 numOfFeature = size(candidate_points, 1);
@@ -107,10 +107,10 @@ S_i.T = repmat(T(:), [1, numOfFeature]);
 %% Continuous operation
 range = (bootstrap_frames(2)+1):last_frame;
 global bearingAngleCosThreshold;
-bearingAngleCosThreshold = 0.97;
-X = [T(1, 4)];
-Y = [T(2, 4)];
-Z = [T(3, 4)];
+bearingAngleCosThreshold = 0.98;
+X = T(1, 4);
+Y = T(2, 4);
+Z = T(3, 4);
 for i = range
     fprintf('\n\nProcessing frame %d\n=====================\n', i);
     if ds == 0

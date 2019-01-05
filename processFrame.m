@@ -31,7 +31,23 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     if (sum(canBeAdded) ~= 0)
         new_points = candidate_points(canBeAdded, :);
         new_T = S_prev.T(:, canBeAdded);
-        new_F = S_prev.F(:, canBeAdded);
+        new_F = S_prev.F(:, canBeAdded);% but why detect feature gives non integer points?
+        one_img = ones(size(I_i));
+        occupied_points = key_points;
+        occupied_points = floor(occupied_points + 0.5);
+        ind = sub2ind(size(I_i), occupied_points(:, 2), occupied_points(:, 1));
+        one_img(ind) = 0;
+        i = 1;
+        while(i <= size(new_points, 1))
+           if (one_img(floor(new_points(i, 2)+0.5), floor(new_points(i, 1)+0.5)) == 0)
+               new_points(i, :) = [];
+               new_T(:, i) = [];
+               new_F(:, i) = [];
+           else
+               i = i + 1;
+           end
+        end
+        
         new_landmarks = zeros(3, size(new_points, 1));
         camMatrix2 = cameraMatrix(cameraParams, worldOrientation', -worldLocation*worldOrientation');
         for i=1:size(new_points, 1)
@@ -57,20 +73,22 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     
     % add new candidates
     featurePoints = detectHarrisFeatures(I_i);
-    featurePoints = featurePoints.Location;
-    featurePoints = floor(featurePoints + 0.5); % but why detect feature gives non integer points?
-    zero_img = zeros(size(I_i));
+    featurePoints = featurePoints.Location; % but why detect feature gives non integer points?
     one_img = ones(size(I_i));
-    occupied_points = [key_points; candidate_points];
+    occupied_points = candidate_points;
     occupied_points = floor(occupied_points + 0.5);
     ind = sub2ind(size(I_i), occupied_points(:, 2), occupied_points(:, 1));
     one_img(ind) = 0;
-    ind = sub2ind(size(I_i), featurePoints(:, 2), featurePoints(:, 1));
-    zero_img(ind) = 1;
-    featurePoints = zero_img .* one_img;
-    [row, col] = find(featurePoints);
-    featurePoints = [col, row];
+    i = 1;
+    while(i <= size(featurePoints, 1))
+       if (one_img(floor(featurePoints(i, 2)+0.5), floor(featurePoints(i, 1)+0.5)) == 0)
+           featurePoints(i, :) = [];
+       else
+           i = i + 1;
+       end
+    end
     candidate_points = [candidate_points; featurePoints];
+%     release(candidateTracker);
     setPoints(candidateTracker, candidate_points);% add new tracking candidate
     numOfFeature = size(featurePoints, 1);
     S_i.F = [S_i.F, featurePoints'];
