@@ -72,10 +72,13 @@ initialize(keyPointTracker, featurePoints, img0);
 [key_points,validity] = keyPointTracker(img1);
 featurePoints = featurePoints(validity, :);
 key_points = key_points(validity, :);
-[E, inlier_index]= estimateEssentialMatrix(featurePoints, key_points, cameraParams);
-[init_rotation, init_location] = relativeCameraPose(E, cameraParams, featurePoints(inlier_index, :), key_points(inlier_index, :));
+[E, validity]= estimateEssentialMatrix(featurePoints, key_points, cameraParams);
+featurePoints = featurePoints(validity, :);
+key_points = key_points(validity, :);
+setPoints(keyPointTracker, key_points);
+[init_rotation, init_location] = relativeCameraPose(E, cameraParams, featurePoints, key_points);
 camMatrix1 = cameraMatrix(cameraParams, eye(3), zeros(1, 3));
-camMatrix2 = cameraMatrix(cameraParams, init_rotation, init_location);
+camMatrix2 = cameraMatrix(cameraParams, init_rotation', -init_location*init_rotation');
 worldPoint = triangulate(featurePoints, key_points, camMatrix1, camMatrix2);
 S_i.X = worldPoint';
 
@@ -102,7 +105,7 @@ S_i.T = repmat(T(:), [1, numOfFeature]);
 %% Continuous operation
 range = (bootstrap_frames(2)+1):last_frame;
 global bearingAngleCosThreshold;
-bearingAngleCosThreshold = 0.5;
+bearingAngleCosThreshold = 0.8;
 X = [];
 Y = [];
 Z = [];

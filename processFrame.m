@@ -6,7 +6,9 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     [key_points,validity] = keyPointTracker(I_i);
     key_points = key_points(validity, :);
     S_prev.X = S_prev.X(:, validity);
-    [worldOrientation,worldLocation] = estimateWorldCameraPose(key_points, S_prev.X', cameraParams);
+    [worldOrientation,worldLocation, validity] = estimateWorldCameraPose(key_points, S_prev.X', cameraParams);
+    key_points = key_points(validity, :);
+    S_prev.X = S_prev.X(:, validity);
     T_i = [worldOrientation, worldLocation'];
     
     % then seek new tracking points from candidates
@@ -42,7 +44,7 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
         new_points = [];
         S_i.X = S_prev.X;
     end
-    %key_points = [key_points; new_points];
+    key_points = [key_points; new_points];
     setPoints(keyPointTracker, key_points);% add new tracking point
     
     % update candidates
