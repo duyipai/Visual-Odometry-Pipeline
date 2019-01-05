@@ -19,11 +19,12 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     canBeAdded = false([1, size(S_prev.F, 2)]);
     currentRot = worldLocation;
     currentRot_normalized = currentRot / norm(currentRot);
+    cosAngle = zeros(size(canBeAdded));
     for i=1:length(canBeAdded)
         rot = reshape(S_prev.T(:, i), [3, 4]);
         rot = rot(1:3, 4);
-        cosAngle = dot(currentRot_normalized, rot)/norm(rot);
-        if (cosAngle < bearingAngleCosThreshold)
+        cosAngle(i) = dot(currentRot_normalized, rot)/norm(rot);
+        if (cosAngle(i) < bearingAngleCosThreshold)
             canBeAdded(i) = true;
         end
     end
@@ -32,10 +33,10 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
         new_T = S_prev.T(:, canBeAdded);
         new_F = S_prev.F(:, canBeAdded);
         new_landmarks = zeros(3, size(new_points, 1));
-        camMatrix2 = cameraMatrix(cameraParams, worldOrientation, worldLocation);
+        camMatrix2 = cameraMatrix(cameraParams, worldOrientation', -worldLocation*worldOrientation');
         for i=1:size(new_points, 1)
            T = reshape(new_T(:, i), [3, 4]);
-           camMatrix1 = cameraMatrix(cameraParams, T(1:3, 1:3), T(:, 4));
+           camMatrix1 = cameraMatrix(cameraParams, (T(1:3, 1:3))', -T(:, 4)'*(T(1:3, 1:3))');
            worldPoint = triangulate(new_F(:, i)', new_points(i, :), camMatrix1, camMatrix2);
            new_landmarks(:, i) = worldPoint';
         end
