@@ -107,7 +107,7 @@ S_i.T = repmat(T(:), [1, numOfFeature]);
 %% Continuous operation
 range = (bootstrap_frames(2)+1):last_frame;
 global bearingAngleCosThreshold;
-bearingAngleCosThreshold = 0.98;
+bearingAngleCosThreshold = 0.9;
 X = T(1, 4);
 Y = T(2, 4);
 Z = T(3, 4);

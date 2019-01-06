@@ -3,12 +3,15 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     rng(1);
     % first extract current pose
     global keyPointTracker candidateTracker;
+    K = (cameraParams.IntrinsicMatrix)';
     [key_points,validity] = keyPointTracker(I_i);
     key_points = key_points(validity, :);
     S_prev.X = S_prev.X(:, validity);
     [worldOrientation,worldLocation, validity] = estimateWorldCameraPose(key_points, S_prev.X', cameraParams);
-    key_points = key_points(validity, :);
-    S_prev.X = S_prev.X(:, validity);
+    if (size(key_points, 1) > 300)  
+        key_points = key_points(validity, :);
+        S_prev.X = S_prev.X(:, validity);
+    end
     T_i = [worldOrientation, worldLocation'];
     
     % then seek new tracking points from candidates
@@ -17,13 +20,16 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     S_prev.F = S_prev.F(:, validity);
     S_prev.T = S_prev.T(:, validity);
     canBeAdded = false([1, size(S_prev.F, 2)]);
-    currentRot = worldLocation;
-    currentRot_normalized = currentRot / norm(currentRot);
     cosAngle = zeros(size(canBeAdded));
     for i=1:length(canBeAdded)
-        rot = reshape(S_prev.T(:, i), [3, 4]);
-        rot = rot(1:3, 4);
-        cosAngle(i) = dot(currentRot_normalized, rot)/norm(rot);
+        this_T = reshape(S_prev.T(:, i), [3, 4]);
+        this_location = this_T(1:3, 4);
+        this_orientation = this_T(1:3, 1:3);
+        this_init_point = K\[S_prev.F(:, i); 1];
+        vector_init = this_orientation * this_init_point + this_location;
+        this_current_point = K\[(candidate_points(i, :))'; 1];
+        vector_current = worldOrientation * this_current_point + worldLocation';
+        cosAngle(i) = dot(vector_init, vector_current)/norm(vector_init)/norm(vector_current);
         if (cosAngle(i) < bearingAngleCosThreshold)
             canBeAdded(i) = true;
         end
