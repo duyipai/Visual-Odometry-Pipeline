@@ -61,13 +61,11 @@ end
 focalLength = [K(1, 1); K(2, 2)];
 principalPoint = [K(1, 3); K(2, 3)];
 imageSize = size(img0);
-%cameraParams = cameraIntrinsics(focalLength,principalPoint,imageSize);
 cameraParams = cameraParameters('IntrinsicMatrix', K');
 % init tracker
 featurePoints = detectHarrisFeatures(img0);
 featurePoints = featurePoints.Location;
-keyPointTracker = vision.PointTracker('MaxBidirectionalError', 1);
-% keyPointTracker = vision.PointTracker;
+keyPointTracker = vision.PointTracker('MaxBidirectionalError', 2);
 initialize(keyPointTracker, featurePoints, img0);
 
 % init landmarks
@@ -98,7 +96,7 @@ featurePoints_new = zero_img .* one_img;
 [row, col] = find(featurePoints_new);
 featurePoints_new = [col, row];
 candidate_points = single(featurePoints_new);
-candidateTracker = vision.PointTracker('MaxBidirectionalError', 1);
+candidateTracker = vision.PointTracker('MaxBidirectionalError', 0.01);
 initialize(candidateTracker, candidate_points, img1);% init candidate tracker
 numOfFeature = size(candidate_points, 1);
 S_i.F = candidate_points';

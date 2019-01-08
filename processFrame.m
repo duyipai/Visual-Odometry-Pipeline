@@ -1,17 +1,17 @@
 function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use spacial coordinate
     global bearingAngleCosThreshold;
-    rng(1);
+    rng(0);
     % first extract current pose
     global keyPointTracker candidateTracker;
     K = (cameraParams.IntrinsicMatrix)';
     [key_points,validity] = keyPointTracker(I_i);
     key_points = key_points(validity, :);
     S_prev.X = S_prev.X(:, validity);
-    [worldOrientation,worldLocation, validity] = estimateWorldCameraPose(key_points, S_prev.X', cameraParams);
-    if (size(key_points, 1) > 300)  
-        key_points = key_points(validity, :);
-        S_prev.X = S_prev.X(:, validity);
-    end
+    [worldOrientation,worldLocation, validity] = estimateWorldCameraPose(key_points, single(S_prev.X'), cameraParams);
+%     if (size(key_points, 1) > 500)  
+%         key_points = key_points(validity, :);
+%         S_prev.X = S_prev.X(:, validity);
+%     end
     T_i = [worldOrientation, worldLocation'];
     
     % then seek new tracking points from candidates
@@ -34,7 +34,7 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
             canBeAdded(i) = true;
         end
     end
-    if (sum(canBeAdded) ~= 0)
+    if (sum(canBeAdded) > 5)
         new_points = candidate_points(canBeAdded, :);
         new_T = S_prev.T(:, canBeAdded);
         new_F = S_prev.F(:, canBeAdded);% but why detect feature gives non integer points?
@@ -62,12 +62,15 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
            worldPoint = triangulate(new_F(:, i)', new_points(i, :), camMatrix1, camMatrix2);
            new_landmarks(:, i) = worldPoint';
         end
-        S_i.X = [S_prev.X, new_landmarks]; % add new landmark
+%         S_i.X = [S_prev.X, new_landmarks]; % add new landmark
+%         key_points = [key_points; new_points];
+        
+        S_i.X = new_landmarks; % add new landmark
+        key_points = new_points;
     else
-        new_points = [];
         S_i.X = S_prev.X;
     end
-    key_points = [key_points; new_points];
+    
     setPoints(keyPointTracker, key_points);% add new tracking point
     
     % update candidates
