@@ -1,6 +1,7 @@
 function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use spacial coordinate
     global bearingAngleCosThreshold;
     rng(0);
+    
     % first extract current pose
     global keyPointTracker candidateTracker;
     K = (cameraParams.IntrinsicMatrix)';
@@ -75,9 +76,9 @@ function [S_i, T_i] = processFrame(I_i, S_prev, cameraParams) % remember to use 
     
     % update candidates
     %if(sum(canBeAdded) ~= size(canBeAdded, 2))
-        candidate_points = candidate_points(~canBeAdded, :);
-        S_i.F = S_prev.F(:, ~canBeAdded);
-        S_i.T = S_prev.T(:, ~canBeAdded); % removed candidates that are already keypoints 
+    candidate_points = candidate_points(~canBeAdded, :);
+    S_i.F = S_prev.F(:, ~canBeAdded);
+    S_i.T = S_prev.T(:, ~canBeAdded); % removed candidates that are already keypoints 
     %end
     
     % add new candidates
