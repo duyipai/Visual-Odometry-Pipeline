@@ -125,7 +125,6 @@ for i = range
     end
     
     [S_i, T_i] = processFrame(image, S_i, cameraParams);
-    % Makes sure that plots refresh.  
     X = [X; T_i(1, 4)];
     Y = [Y; T_i(2, 4)];
     Z = [Z; T_i(3, 4)];
